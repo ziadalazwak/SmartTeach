@@ -1,0 +1,6 @@
+@SmartTeach.Api_HostAddress = http://localhost:5155
+
+GET {{SmartTeach.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
