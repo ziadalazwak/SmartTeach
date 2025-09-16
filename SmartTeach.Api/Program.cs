@@ -1,15 +1,18 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using SmartTeach.Api.MiddleWare;
 using SmartTeach.App.Dto;
 using SmartTeach.App.Validators;
-using Microsoft.AspNetCore.RateLimiting;
-using System.Threading.RateLimiting;
 using SmartTeach.Persistence.Configrations;
 using SmartTeach.Persistence.Dbcontext;
+using System.Text;
+using System.Threading.RateLimiting;
 
-using SmartTeach.Api.MiddleWare;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +38,30 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtSettings["SigingKey"]!)
+        )
+    };
+});
+
 
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
