@@ -7,7 +7,7 @@ using SmartTeach.App.Services;
 using SmartTeach.Domain.Interfaces;
 using SmartTeach.Persistence.Dbcontext;
 using SmartTeach.Persistence.Reposatory;
-
+using SmartTeach.Persistence.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +30,8 @@ namespace SmartTeach.Persistence.Configrations
             services.AddScoped<ISessionMangmentService, SessionMangmentService>();  
             services.AddScoped<IAttendacesReposatory, AttendacesReposatory>();
             services.AddScoped<IReprotMangmentService, ReportMangmentService>();
+            services.AddScoped<IAuthenticationService, AuthenticationService>();
+            services.AddScoped<TokenService>();
 
 
         }

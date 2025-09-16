@@ -22,7 +22,7 @@ namespace SmartTeach.Persistence.Services
             _configuration = configuration;
             _userManager = userManager;
         }
-        public async Task<string> CreateToken(ApplicationUser user)
+        public async Task<JwtSecurityToken> CreateToken(ApplicationUser user)
         {
             // Get claims & roles
             var userClaims = await _userManager.GetClaimsAsync(user);
@@ -42,7 +42,7 @@ namespace SmartTeach.Persistence.Services
             .Union(userClaims);
 
             // Get JWT config
-            var key = _configuration["Jwt:Key"];
+            var key = _configuration["Jwt:SigningKey"];
             var issuer = _configuration["Jwt:Issuer"];
             var audience = _configuration["Jwt:Audience"];
             var expireMinutes = int.Parse(_configuration["Jwt:ExpireMinutes"] ?? "60");
@@ -61,7 +61,7 @@ namespace SmartTeach.Persistence.Services
             );
 
             // Return token string
-            return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            return jwtSecurityToken;
         }
 
     }
