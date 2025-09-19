@@ -13,5 +13,6 @@ namespace SmartTeach.Persistence.Dbcontext
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public ICollection<Group>? Groups { get; set; } 
+        public ICollection <RefreshToken>? RefreshTokens { get; set; }
     }
 }

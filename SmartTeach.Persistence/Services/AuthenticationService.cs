@@ -31,9 +31,33 @@ namespace SmartTeach.Persistence.Services
         
 
             var token = await _tokenService.CreateToken(User);   
+
+
+
+
+        
+            if(User.RefreshTokens.Any(rt => rt.IsActive))
+            {
+                var activeRefreshToken = User.RefreshTokens.FirstOrDefault(rt => rt.IsActive);
+                return new AuthResponse
+                {
+                    //Expiration=token.ValidTo,
+                    Username = login.Username,
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    IsAuthenticated = true,
+                    Message = "Login Successfull",
+                    Roles = (await _userManager.GetRolesAsync(User)).ToList(),
+                    RefreshToken = activeRefreshToken.Token,
+                    RefreshTokenExpiration = activeRefreshToken.ExpiresOn
+                };
+            } var refreshToken = _tokenService.GenerateRefreshToken();
+            User.RefreshTokens.Add(refreshToken);
+            await _userManager.UpdateAsync(User);
             return new AuthResponse
             {
-                Expiration=token.ValidTo,
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiration = refreshToken.ExpiresOn,
+                //Expiration=token.ValidTo,
                 Username = login.Username,
                 Token =new JwtSecurityTokenHandler().WriteToken( token),
                 IsAuthenticated = true,
@@ -73,13 +97,54 @@ namespace SmartTeach.Persistence.Services
             await _userManager.AddToRoleAsync(user, register.Role.ToString());   
 
             var token = await _tokenService.CreateToken(user); 
+
+            var refreshToken = _tokenService.GenerateRefreshToken();    
+            user.RefreshTokens.Add(refreshToken);
+            await _userManager.UpdateAsync(user);
             return new AuthResponse{ 
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiration = refreshToken.ExpiresOn,
                 Roles = new List<string>{register.Role.ToString()},
                 Username = user.UserName,
 
-                Token=new JwtSecurityTokenHandler().WriteToken(token), IsAuthenticated = true, Message = "User created successfully" ,Expiration=token.ValidTo};   
+                Token=new JwtSecurityTokenHandler().WriteToken(token), IsAuthenticated = true, Message = "User created successfully" };   
 
 
+        }
+        public async Task<AuthResponse> RefreshTokenAsync(string token)
+        {
+            var authmodel = new AuthResponse();
+            var user =  _userManager.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
+            if (user == null)
+            {
+                authmodel.IsAuthenticated = false;
+                authmodel.Message = "Invalid token";
+                return authmodel;
+            }
+            var refreshToken = user.RefreshTokens.Single(t => t.Token == token);
+            if (!refreshToken.IsActive)
+            {
+                authmodel.IsAuthenticated = false;
+                authmodel.Message = "Inactive token";
+                return authmodel;
+            }
+            // Revoke current refresh token
+            refreshToken.RevokedOn = DateTime.UtcNow;
+            // Generate new refresh token and add it to the user
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            user.RefreshTokens.Add(newRefreshToken);
+            await _userManager.UpdateAsync(user);
+            // Generate new JWTc 
+            var jwtToken =  _tokenService.CreateToken(user).Result;
+            // Return authentication response
+            authmodel.Token = new JwtSecurityTokenHandler().WriteToken(jwtToken);
+            authmodel.RefreshToken = newRefreshToken.Token;
+            authmodel.RefreshTokenExpiration = newRefreshToken.ExpiresOn;
+            authmodel.IsAuthenticated = true;
+            authmodel.Username = user.UserName;
+            authmodel.Message = "Token refreshed successfully";
+            authmodel.Roles = _userManager.GetRolesAsync(user).Result.ToList();
+            return authmodel;
         }
     } }
 

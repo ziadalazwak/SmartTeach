@@ -38,35 +38,36 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
-var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+     .AddEntityFrameworkStores<SmartTeachDbcontext>()
+     .AddDefaultTokenProviders();
+
 
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
+}).AddJwtBearer(options =>
 {
+    var jwtSettings = builder.Configuration.GetSection("Jwt");
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-
+        ClockSkew = TimeSpan.Zero, // <---- important
         ValidIssuer = jwtSettings["Issuer"],
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings["SigingKey"]!)
-        )
+            Encoding.UTF8.GetBytes(jwtSettings["SigningKey"]))
     };
 });
 
+builder.Services.AddAuthorization();
 
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-     .AddEntityFrameworkStores<SmartTeachDbcontext>()
-     .AddDefaultTokenProviders();
 builder.Services.AddValidatorsFromAssembly(typeof(SmartTeach.App.AssemplyMarker).Assembly);
 
 
@@ -84,7 +85,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

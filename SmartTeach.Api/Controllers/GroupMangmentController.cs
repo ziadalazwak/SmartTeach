@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using SmartTeach.App.Dto;
@@ -9,15 +10,15 @@ using SmartTeach.App.Services;
 
 namespace SmartTeach.Api.Controllers
 {
-  
+    
     [ApiController]
 
     [Route("api/[controller]")]
-
-    public class GroupMangmentCotroller:ControllerBase
+[Authorize]
+    public class GroupMangmentController:ControllerBase
     {
         private readonly IGruopMangmentService gruopMangment;
-        public GroupMangmentCotroller(IGruopMangmentService gruopMangment)
+        public GroupMangmentController(IGruopMangmentService gruopMangment)
         {
             this.gruopMangment=gruopMangment;
         }
