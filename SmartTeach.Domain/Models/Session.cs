@@ -10,7 +10,8 @@ namespace SmartTeach.Domain.Models
     {
         public int Id { get; set; }
         public int GroupId { get; set; }    
-        public DateTime? StartTime { get; set; }
+        public DateTime StartTime { get; set; }
+        
         public string? Topic { get; set; }
         public Group Group { get; set; } 
         public  ICollection<Attendance>? Attendances { get; set; } 

@@ -14,6 +14,7 @@ namespace SmartTeach.App.Dto.SessionDto
         public int GroupId { get; set; }
         public DateTime? StartTime { get; set; }
         public string? Topic { get; set; }
+
         public IEnumerable<GetAttendaceDto>? Attendances { get; set; }
 
     }

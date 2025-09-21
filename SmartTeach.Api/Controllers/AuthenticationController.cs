@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartTeach.App.Dto.AuthDto;
 using SmartTeach.App.Services;
+using SmartTeach.Persistence.Services;
 
 namespace SmartTeach.Api.Controllers
 {
@@ -11,9 +12,11 @@ namespace SmartTeach.Api.Controllers
     {
         private readonly IAuthenticationService authService;
 
+
         public AuthenticationController(IAuthenticationService authService)
         {
             this.authService = authService;
+
         }
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
@@ -43,7 +46,8 @@ namespace SmartTeach.Api.Controllers
             {
                 return BadRequest(result.Message);
             }
-            SetRefreshTokenInCookie(result.RefreshToken, result.RefreshTokenExpiration);
+            if(!string.IsNullOrEmpty(result.RefreshToken))
+                SetRefreshTokenInCookie(result.RefreshToken, result.RefreshTokenExpiration);
             return Ok(result);
         }
         void SetRefreshTokenInCookie(string refreshToken, DateTime expiresOn)
@@ -72,6 +76,21 @@ namespace SmartTeach.Api.Controllers
             }
             SetRefreshTokenInCookie(result.RefreshToken, result.RefreshTokenExpiration);
             return Ok(result);
+        }
+        [HttpPost("RevokeToken")]
+        public async Task<IActionResult> RevokeToken([FromBody] RevokeTokenDto request)
+        {
+            var token = request.Token ?? Request.Cookies["refreshToken"];
+            if (string.IsNullOrEmpty(token))
+            {
+                return BadRequest("No token provided.");
+            }
+            var result = await authService.RevokeRefreshTokenAsync(token);
+            if (!result)
+            {
+                return BadRequest("Token revocation failed.");
+            }
+            return Ok("Token revoked successfully.");
         }
     }
 }

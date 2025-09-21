@@ -146,5 +146,22 @@ namespace SmartTeach.Persistence.Services
             authmodel.Roles = _userManager.GetRolesAsync(user).Result.ToList();
             return authmodel;
         }
+                public async Task<bool> RevokeRefreshTokenAsync(string token)
+        {
+            var user = _userManager.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
+            if (user == null)
+            {
+                return false;
+            }
+            var refreshToken = user.RefreshTokens.Single(t => t.Token == token);
+            if (!refreshToken.IsActive)
+            {
+                return false;
+            }
+            // Revoke current refresh token
+            refreshToken.RevokedOn = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+            return true;
+        }
     } }
 

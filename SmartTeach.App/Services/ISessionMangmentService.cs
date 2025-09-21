@@ -13,7 +13,7 @@ namespace SmartTeach.App.Services
         // Define methods for session management here, e.g.:
        public  Task<AddSessionDto> AddSession(int groupId,AddSessionDto addSessionDto);
  
-        public Task<IEnumerable<GetSessionDto>> GetAllSessionsAsync(int groupId);
+        public Task<IEnumerable<GetSessionDto>> GetAllSessionsAsync(SessionRequestQuery query);
         public Task<GetSessionDto> GetSessionByIdAsync(int sessionId);
 
         public Task AddAttendaceForSessionAsync(IEnumerable<AddAttendanceDto> addAttendanceDto,int sessionid);

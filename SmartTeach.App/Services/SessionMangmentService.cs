@@ -40,16 +40,31 @@ namespace SmartTeach.App.Services
             return addSessionDto;
         }
 
-        public async Task<IEnumerable<GetSessionDto>> GetAllSessionsAsync(int groupId)
+        public async Task<IEnumerable<GetSessionDto>> GetAllSessionsAsync(SessionRequestQuery query)
         {
-            //creates new rep for group or session and filter on it then call it here
-            var sessions = await _unitOfWork.Sessions.GetAllAsync(filter: a => a.GroupId==groupId);
-            if (sessions == null)
-                throw new ArgumentException($"No sessions found for group with ID {groupId}.");
+            var sessions = _unitOfWork.Sessions.Query();
+
+            if (query.GroupId > 0)
+                sessions = sessions.Where(s => s.GroupId == query.GroupId);
+
+            if (query.Year > 0)
+                sessions = sessions.Where(s => s.StartTime.Year == query.Year);
+
+            if (query.Month > 0)
+                sessions = sessions.Where(s => s.StartTime.Month == query.Month);
+
+            if (query.Day > 0)
+                sessions = sessions.Where(s => s.StartTime.Day == query.Day);
+
+
+
+            if (sessions == null || !sessions.Any())
+                throw new ArgumentException($"No sessions found for this Query.");
 
             var sessionDtos = sessions.MapToDtos();
             return sessionDtos;
         }
+
 
         public async Task<IEnumerable<GetAttendaceDto>> GetAttendanceBySessionAndStudentIdAsync(int SessionID, int StudentId)
         {
@@ -64,6 +79,7 @@ namespace SmartTeach.App.Services
         public async Task<IEnumerable<GetAttendaceDto>> GetAttendancesBySessionIdAsync(int sessionId)
         {
             var attendances = await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == sessionId,includes:a=>a.Student);
+            
             if (attendances == null || !attendances.Any())
                 throw new ArgumentException($"No attendances found for session ID {sessionId}.");
             return attendances.MapTDtos();

@@ -11,7 +11,7 @@ namespace SmartTeach.App.Dto.SessionDto
     {
      
   
-        public DateTime? StartTime { get; set; }
+        public DateTime  StartTime { get; set; }
         public string? Topic { get; set; }
 
 

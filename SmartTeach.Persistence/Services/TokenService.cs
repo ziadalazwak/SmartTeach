@@ -72,7 +72,7 @@ namespace SmartTeach.Persistence.Services
             {
                 rng.GetBytes(randomNumber);
                 return new RefreshToken
-                {
+                {   
                     Token = Convert.ToBase64String(randomNumber),
                     ExpiresOn = DateTime.UtcNow.AddDays(7),
                     CreatedOn = DateTime.UtcNow
@@ -114,6 +114,7 @@ namespace SmartTeach.Persistence.Services
             authmodel.Roles = _userManager.GetRolesAsync(user).Result.ToList();
             return authmodel;
         }
+
 
     }
 }

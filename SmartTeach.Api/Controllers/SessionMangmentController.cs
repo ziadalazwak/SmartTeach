@@ -15,10 +15,10 @@ namespace SmartTeach.Api.Controllers
             this.sessionMangmentService = sessionMangmentService;
         }
         [HttpGet]
-        [Route("GetAllSessions/{groupId}")]
-        public async Task<IActionResult> GetAllSessions(int groupId)
+    
+        public async Task<IActionResult> GetAllSessions([FromQuery] SessionRequestQuery query)
         {
-            var sessions = await sessionMangmentService.GetAllSessionsAsync(groupId);
+            var sessions = await sessionMangmentService.GetAllSessionsAsync( query);
             return Ok(sessions);
         }
         [HttpGet]

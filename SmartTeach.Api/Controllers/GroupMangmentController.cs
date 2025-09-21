@@ -23,6 +23,7 @@ namespace SmartTeach.Api.Controllers
             this.gruopMangment=gruopMangment;
         }
         [HttpGet]
+        [Authorize(Roles ="Admin,Teacher")]
         public async Task<IActionResult> Get() { 
         var groups=await gruopMangment.GetAllGroups();
             return Ok ( groups );

@@ -60,6 +60,24 @@ namespace SmartTeach.Persistence.Reposatory
 
                     return await query.ToListAsync();
         }
+        public  IQueryable<T> Query(
+    Expression<Func<T, bool>> filter = null,
+    params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                    query = query.Include(include);
+            }
+
+            return query;
+        }
+
         public async Task<T> GetByIdAsync(
        object id,
        params Expression<Func<T, object>>[] includes)
