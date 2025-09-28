@@ -22,6 +22,7 @@ namespace SmartTeach.App.Interfaces
         public IQueryable<T> Query(
     Expression<Func<T, bool>> filter = null,
     params Expression<Func<T, object>>[] includes);
+
         public Task SaveChangesAsync();
       
     }

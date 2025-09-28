@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using SmartTeach.App.Interfaces;
 using SmartTeach.Persistence.Dbcontext;
 using System;
@@ -60,7 +61,28 @@ namespace SmartTeach.Persistence.Reposatory
 
                     return await query.ToListAsync();
         }
-        public  IQueryable<T> Query(
+
+        public async Task<IEnumerable<T>> GetAllAsync(
+    Expression<Func<T, bool>> filter = null,
+    Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+    Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
+        {
+            IQueryable<T> query = _dbSet;
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            if (include != null)
+                query = include(query);
+
+            if (orderBy != null)
+                query = orderBy(query);
+
+            return await query.ToListAsync();
+        }
+
+
+        public IQueryable<T> Query(
     Expression<Func<T, bool>> filter = null,
     params Expression<Func<T, object>>[] includes)
         {
