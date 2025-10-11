@@ -6,18 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SmartTeach.App.Dto.StudentDto
+namespace SmartTeach.App.Dto.StudentAttendaceDto
 {
-    public class GetStudentDto
+    public class StudentForAttendaceDto
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Id { get; set; }
-        public ICollection<GetAttendaceDto>? Attendances { get; set; }
-        public ICollection<Payment>? Payments { get; set; }
- 
+     public bool IsPresent { get; set; }
+
         public string Address { get; set; }
         public string PhoneNumber { get; set; }
-
     }
 }

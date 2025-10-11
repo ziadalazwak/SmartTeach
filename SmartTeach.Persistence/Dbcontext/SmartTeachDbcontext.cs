@@ -21,7 +21,9 @@ namespace SmartTeach.Persistence.Dbcontext
             // StudentGroup - Composite Primary Key
             modelBuilder.Entity<StudentGroup>()
                 .HasKey(sg => new { sg.StudentId, sg.GroupId });
-
+            modelBuilder.Entity<Student>()
+                .HasIndex(s => s.PhoneNumber)
+                .IsUnique();    
             // StudentGroup - Student relationship
             modelBuilder.Entity<StudentGroup>()
                 .HasOne(sg => sg.Student)
@@ -69,6 +71,7 @@ namespace SmartTeach.Persistence.Dbcontext
                 .WithMany(s => s.Attendances)
                 .HasForeignKey(a => a.SessionId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Attendance>().HasIndex(a => new { a.StudentId, a.SessionId }).IsUnique();
 
             // ApplicationUser - Group relationship
             modelBuilder.Entity<Group>()

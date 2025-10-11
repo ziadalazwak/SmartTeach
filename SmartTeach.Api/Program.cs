@@ -30,7 +30,7 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5,
+                PermitLimit = 100,
                 Window = TimeSpan.FromSeconds(10),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 0
@@ -38,7 +38,17 @@ builder.Services.AddRateLimiter(options =>
 
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:8080") // React frontend
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
      .AddEntityFrameworkStores<SmartTeachDbcontext>()
      .AddDefaultTokenProviders();
@@ -73,6 +83,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(SmartTeach.App.AssemplyMarker)
 
 builder.Services.AddPersistenceServices(builder.Configuration); 
 var app = builder.Build();
+app.UseCors("AllowFrontend");
 app.UseRouting();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseRateLimiter();

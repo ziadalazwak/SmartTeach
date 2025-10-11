@@ -51,6 +51,7 @@ namespace SmartTeach.App.Mapping
                 Student=attendance.Student.MapToGetStudentDto()
                 ,
                 StudentId=attendance.StudentId,
+                Session=attendance.Session.MapToDto(),
                 SessionId=attendance.SessionId
             };
             

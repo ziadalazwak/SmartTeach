@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SmartTeach.App.Dto.StudentGroupDto
+namespace SmartTeach.App.Dto.StudentGroup
 {
     public class AddStudentToGroupDto
     {

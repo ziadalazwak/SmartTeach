@@ -1,4 +1,9 @@
-﻿using SmartTeach.App.Dto.StudentDto;
+﻿using SmartTeach.App.Dto.AttendanceDto;
+using SmartTeach.App.Dto.ParentInfoDto;
+using SmartTeach.App.Dto.StudentAttendaceDto;
+using SmartTeach.App.Dto.StudentDto;
+using SmartTeach.App.Mapping.ParentInfoMapping;
+using SmartTeach.App.Request;
 using SmartTeach.Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -50,9 +55,42 @@ namespace SmartTeach.App.Mapping
                 Payments = student.Payments
             };
         }
+        public static StudentForAttendaceDto MapToStudentAttendacesDto(this Student student)
+        {
+            return new StudentForAttendaceDto
+            {
+                Id = student.Id,
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                Address = student.Address,
+                PhoneNumber = student.PhoneNumber
+                ,
+
+
+              IsPresent=student.Attendances!=null && student.Attendances.Any() ? student.Attendances.Last().IsPresent : false,
+            };
+        }
+        public static IEnumerable<StudentForAttendaceDto> MapToStudentAttendacesDtos(this IEnumerable<Student> students)
+        {
+            return students.Select(s => s.MapToStudentAttendacesDto()).ToList();
+        }
         public static IEnumerable<GetStudentDto> MapToGetStudentDtos(this IEnumerable<Student> students)
         {
             return students.Select(s => s.MapToGetStudentDto()).ToList();
+        }
+        public static StudentInfoForParentDto MapToStudentInfoForParentDto(this Student student,TeacherRequestForParentInfo TeacherInfo)
+        {
+            return new StudentInfoForParentDto
+            {
+                Id = student.Id,
+                FullName = $"{student.FirstName} {student.LastName}",
+                PhoneNumber = student.PhoneNumber,
+
+                Address = student.Address,
+                Group =student.StudentGroups.MapToParentDtos(),
+                TeacherInfo = TeacherInfo,
+                Attendance = student.Attendances != null ? student.Attendances.Select(a => a.MapToParentDto()).ToList() : new List<ParentAttendaceInfoDto>()
+            };
         }
         public static Student MapToStudent(this UpdateStudentDto updateStudentDto)
         {

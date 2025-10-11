@@ -6,16 +6,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SmartTeach.App.Dto.StudentGroupDto
+namespace SmartTeach.App.Dto.StudentGroup
 {
-    public class StudentGroupDto
+    public class StudentGroupDto    
     {
         public int StudentId { get; set; }
 
         public int GroupId { get; set; }
 
 
-        public DateTime? EnrollmentDate { get; set; } = DateTime.Now;
+        public DateTime? EnrollmentDate { get; set; } = DateTime.MinValue;
 
 
 

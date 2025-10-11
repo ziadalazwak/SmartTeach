@@ -1,7 +1,10 @@
 ﻿using SmartTeach.App.Dto.AttendanceDto;
 using SmartTeach.App.Dto.SessionDto;
+using SmartTeach.App.Dto.StudentAttendaceDto;
+using SmartTeach.App.Dto.StudentDto;
 using SmartTeach.App.Interfaces;
 using SmartTeach.App.Mapping;
+using SmartTeach.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,29 +15,42 @@ namespace SmartTeach.App.Services
 {
     public class SessionMangmentService : ISessionMangmentService
     {
-       private readonly IUnitOfWork _unitOfWork;
-        public SessionMangmentService(IUnitOfWork unitOfWork)
+        private readonly ISessionReposatory _sessionReposatory;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IGroupReposatory _groupReposatory;
+        public SessionMangmentService(IUnitOfWork unitOfWork, IGroupReposatory groupReposatory,ISessionReposatory sessionReposatory)
         {
             _unitOfWork = unitOfWork;
-        }
-        public async Task AddAttendaceForSessionAsync(IEnumerable<AddAttendanceDto> addAttendanceDto,int sessionid)
-        {
-            var attendances =  addAttendanceDto.MapToDomains( sessionid);
-                await _unitOfWork.Attendances.AddRangeAsync(attendances);   
-            var commit = await _unitOfWork.CompleteAsync(); 
-            if(commit <= 0)
-                throw new InvalidOperationException("Could not add attendance for the session.");   
-
+            _groupReposatory = groupReposatory;
+            _sessionReposatory = sessionReposatory; 
 
         }
-
-        public async Task<AddSessionDto>  AddSession(int groupId, AddSessionDto addSessionDto)
+        public async Task<GetStudentDto> AddAttendaceForSessionAsync(AddAttendanceDto addAttendanceDto, int sessionid)
         {
-            var session= addSessionDto.MapToDomain(groupId);
-           await _unitOfWork.Sessions.AddAsync(session);
-            var commit= await _unitOfWork.CompleteAsync();
-            if(commit <= 0)
-                throw new InvalidOperationException("Could not create the session.");   
+            var student = await _unitOfWork.Students.GetByIdAsync(addAttendanceDto.StudentId);
+            if(student == null) throw new InvalidOperationException(" Id is invalid ");
+
+            var attendanceExists = await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == sessionid && a.StudentId == addAttendanceDto.StudentId);
+            if (attendanceExists != null && attendanceExists.Any())
+                throw new InvalidOperationException("Attendance for this student in this session already exists.");
+
+            var attendances = addAttendanceDto.MapToDomain(sessionid);
+            await _unitOfWork.Attendances.AddAsync(attendances);
+            var commit = await _unitOfWork.CompleteAsync();
+            if (commit <= 0)
+                throw new InvalidOperationException("Could not add attendance for the session.");
+
+            return student.MapToGetStudentDto();
+
+        }
+
+        public async Task<AddSessionDto> AddSession(int groupId, AddSessionDto addSessionDto)
+        {
+            var session = addSessionDto.MapToDomain(groupId);
+            await _unitOfWork.Sessions.AddAsync(session);
+            var commit = await _unitOfWork.CompleteAsync();
+            if (commit <= 0)
+                throw new InvalidOperationException("Could not create the session.");
 
 
             return addSessionDto;
@@ -69,7 +85,7 @@ namespace SmartTeach.App.Services
         public async Task<IEnumerable<GetAttendaceDto>> GetAttendanceBySessionAndStudentIdAsync(int SessionID, int StudentId)
         {
             //categorize the repos create arepo and add this methid and call it here
-            var attendace =await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == SessionID && a.StudentId == StudentId,includes:a=>a.Student);
+            var attendace = await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == SessionID && a.StudentId == StudentId, includes: a => a.Student);
             if (attendace == null || !attendace.Any())
                 throw new ArgumentException($"No attendance found for session ID {SessionID} and student ID {StudentId}.");
             var attendanceDto = attendace.MapTDtos();
@@ -78,20 +94,51 @@ namespace SmartTeach.App.Services
 
         public async Task<IEnumerable<GetAttendaceDto>> GetAttendancesBySessionIdAsync(int sessionId)
         {
-            var attendances = await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == sessionId,includes:a=>a.Student);
-            
+            var attendances = await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == sessionId, includes: a => a.Student);
+
             if (attendances == null || !attendances.Any())
                 throw new ArgumentException($"No attendances found for session ID {sessionId}.");
             return attendances.MapTDtos();
         }
-
+        public async Task<GetAttendaceDto> ToggaleAttendace(int AttendaceId)
+        {
+            var attendance = await _unitOfWork.Attendances.GetByIdAsync(AttendaceId);
+            if (attendance == null)
+                throw new ArgumentException($"Attendance with ID {AttendaceId} does not exist.");
+            attendance.IsPresent = !attendance.IsPresent;
+            _unitOfWork.Attendances.Update(attendance);
+            var commit = await _unitOfWork.CompleteAsync();
+            if (commit <= 0)
+                throw new InvalidOperationException("Could not update the attendance.");
+            var attendaceDto=new GetAttendaceDto { IsPresent = attendance.IsPresent, StudentId = attendance.StudentId, SessionId = attendance.SessionId, Date = attendance.Date, Id = attendance.Id };
+            return attendaceDto;
+        }
+        
         public async Task<GetSessionDto> GetSessionByIdAsync(int sessionId)
         {
-           var session= await _unitOfWork.Sessions.GetByIdAsync(sessionId);
-            if(session== null)
-                throw new ArgumentException($"Session with ID {sessionId} does not exist.");    
-            var sessionDto = session.MapToDto(); 
+            var session = await _unitOfWork.Sessions.GetByIdAsync(sessionId);
+            if (session== null)
+                throw new ArgumentException($"Session with ID {sessionId} does not exist.");
+            var sessionDto = session.MapToDto();
             return sessionDto;
+        }
+        public async Task<IEnumerable<StudentForAttendaceDto>> GetStudentsAttendaceId(int id, int sessionId)
+        {
+            var students = await _groupReposatory.GetStudentsAttendaces(id);
+            if (students == null)
+                throw new ArgumentException($"StudentGroup with ID {id} does not exist.");
+            var StudentForAttendace = students.MapToStudentAttendacesDtos();
+            return StudentForAttendace;
+        }
+
+        public async Task<IEnumerable<GetAttendaceDto>> GetSessionAttendanceDisplayAsync(int sessionId)
+        {
+          var Attendace=await _sessionReposatory.SessionAttendace(sessionId);
+            if (Attendace == null || !Attendace.Any())
+                throw new ArgumentException($"No attendances found for session ID {sessionId}.");
+          
+           var attendaceDto = Attendace.MapTDtos();
+            return attendaceDto;
         }
     }
 }

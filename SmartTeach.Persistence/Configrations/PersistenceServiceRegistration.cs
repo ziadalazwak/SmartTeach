@@ -31,7 +31,11 @@ namespace SmartTeach.Persistence.Configrations
             services.AddScoped<IAttendacesReposatory, AttendacesReposatory>();
             services.AddScoped<IReprotMangmentService, ReportMangmentService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
-            services.AddScoped<ITeacherMangmentService, TeacherMangmentService>();
+            services.AddScoped<IStudentMangmentService, StudentMangmentService>();
+            services.AddScoped<IStudentReposatory, StudentReposatory>();
+            services.AddScoped<ITeacherReposatroy, TeacherReposatory>();
+            services.AddScoped<IGroupReposatory, GroupReposatory>();
+
             services.AddScoped<TokenService>();
 
 

@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace SmartTeach.App.Dto
 {
-    public class GroupDto   
+    public class ParentGroupInfoDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string Subject { get; set; }
 
         public string centerd { get; set; }
-        public IEnumerable<GetSessionDto>? Sessions { get; set; }
-        public IEnumerable<StudentGroupDto>? GroupStudents { get; set; }
+        public IEnumerable<ParentSessionInfoDto>? Sessions { get; set; }
+        public IEnumerable<ParentStudentGroupInfoDto>? GroupStudents { get; set; }
     }
 }

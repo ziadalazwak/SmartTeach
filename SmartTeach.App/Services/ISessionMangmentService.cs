@@ -1,5 +1,6 @@
 ﻿using SmartTeach.App.Dto.AttendanceDto;
 using SmartTeach.App.Dto.SessionDto;
+using SmartTeach.App.Dto.StudentDto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +17,12 @@ namespace SmartTeach.App.Services
         public Task<IEnumerable<GetSessionDto>> GetAllSessionsAsync(SessionRequestQuery query);
         public Task<GetSessionDto> GetSessionByIdAsync(int sessionId);
 
-        public Task AddAttendaceForSessionAsync(IEnumerable<AddAttendanceDto> addAttendanceDto,int sessionid);
+        public Task<GetStudentDto> AddAttendaceForSessionAsync(AddAttendanceDto addAttendanceDto,int sessionid);
         public Task<IEnumerable<GetAttendaceDto>> GetAttendancesBySessionIdAsync(int sessionId);
           public Task<IEnumerable<GetAttendaceDto>> GetAttendanceBySessionAndStudentIdAsync(int SessionID,int StudentId);
 
-
+        public Task<IEnumerable<GetAttendaceDto>> GetSessionAttendanceDisplayAsync(int sessionId);
+        public  Task<GetAttendaceDto> ToggaleAttendace(int AttendaceId);    
 
     }
 }

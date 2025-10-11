@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using SmartTeach.App.Dto;
 using SmartTeach.App.Dto.StudentDto;
 using SmartTeach.App.Services;
+using System.Security.Claims;
 
 
 
@@ -14,7 +15,7 @@ namespace SmartTeach.Api.Controllers
     [ApiController]
 
     [Route("api/[controller]")]
-[Authorize]
+    [Authorize]
     public class GroupMangmentController:ControllerBase
     {
         private readonly IGruopMangmentService gruopMangment;
@@ -23,19 +24,22 @@ namespace SmartTeach.Api.Controllers
             this.gruopMangment=gruopMangment;
         }
         [HttpGet]
-        [Authorize(Roles ="Admin,Teacher")]
+      
         public async Task<IActionResult> Get() { 
-        var groups=await gruopMangment.GetAllGroups();
+            var TeacherId=User.Claims.FirstOrDefault(c=>c.Type==ClaimTypes.NameIdentifier)?.Value;   
+            var groups=await gruopMangment.GetAllGroups(TeacherId);
             return Ok ( groups );
         }
         [HttpPost]
+
         public async Task<IActionResult>Add(AddGroupDto group)
         {
-            if(ModelState.IsValid == false)
+            var TeacherId=User.Claims.FirstOrDefault(c=>c.Type==ClaimTypes.NameIdentifier)?.Value;  
+            if (ModelState.IsValid == false)
             {
                 return BadRequest(ModelState);
             }
-            var add =await gruopMangment.AddGroup(group);
+            var add =await gruopMangment.AddGroup(group,TeacherId);
 
             return Ok ( add );
         }

@@ -11,6 +11,7 @@ namespace SmartTeach.Persistence.Reposatory
 {
     public class AttendacesReposatory:GenericReposatory<Attendance>, IAttendacesReposatory
     {
+
         public AttendacesReposatory(SmartTeachDbcontext context) : base(context)
         {
         }

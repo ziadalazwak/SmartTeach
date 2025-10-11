@@ -39,14 +39,24 @@ namespace SmartTeach.Api.Controllers
             var createdSession = await sessionMangmentService.AddSession(groupId, addSessionDto);
             return Ok("CREATED SUCESSFULY");
         }
+        [HttpPatch]
+        [Route("ToggaleAttendace/{AttendaceId}")]
+        public async Task<IActionResult> ToggaleAttendace(int AttendaceId)
+        {
+            
+            var updatedAttendance = await sessionMangmentService.ToggaleAttendace(AttendaceId);
+            if (updatedAttendance==null)
+                return NotFound($"Attendance with ID {AttendaceId} not found.");
+            return Ok( updatedAttendance);
+        }
         [HttpPost]
         [Route("AddAttendaceForSession/{sessionId}")]
-        public async Task<IActionResult> AddAttendaceForSession(int sessionId, [FromBody] IEnumerable<AddAttendanceDto> addAttendanceDto)
+        public async Task<IActionResult> AddAttendaceForSession(int sessionId, [FromBody] AddAttendanceDto addAttendanceDto)
         {
-            if (addAttendanceDto == null || !addAttendanceDto.Any())
-                return BadRequest("Attendance data is required.");
-            await sessionMangmentService.AddAttendaceForSessionAsync(addAttendanceDto, sessionId);
-            return Ok("ATTENDANCE ADDED SUCESSFULY");
+            if (addAttendanceDto.StudentId<0)
+                return BadRequest("Attendance data is wrong.");
+          var student=  await sessionMangmentService.AddAttendaceForSessionAsync(addAttendanceDto, sessionId);
+            return Ok(student);
         }
         [HttpGet]
 
@@ -66,6 +76,25 @@ namespace SmartTeach.Api.Controllers
             if (attendance == null || !attendance.Any())
                 return NotFound($"No attendance found for session ID {sessionId} and student ID {studentId}.");
             return Ok(attendance);
+        }
+
+        [HttpGet]
+        [Route("GetSessionAttendanceDisplay/{sessionId}")]
+        public async Task<IActionResult> GetSessionAttendanceDisplay(int sessionId)
+        {
+            try
+            {
+                var sessionAttendance = await sessionMangmentService.GetSessionAttendanceDisplayAsync(sessionId);
+                return Ok(sessionAttendance);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred while retrieving session attendance: {ex.Message}");
+            }
         }
     }
 }

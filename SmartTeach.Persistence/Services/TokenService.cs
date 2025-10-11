@@ -36,9 +36,9 @@ namespace SmartTeach.Persistence.Services
 
             var claims = new[]
             {
-        new Claim(JwtRegisteredClaimNames.Sub, user.UserName ?? ""),
-        new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
-        new Claim(ClaimTypes.NameIdentifier, user.Id)
+   new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),     
+new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),     
+new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? "")
     }
             .Union(roleClaims)
             .Union(userClaims);

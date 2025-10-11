@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartTeach.Persistence.Dbcontext;
 
@@ -11,9 +12,11 @@ using SmartTeach.Persistence.Dbcontext;
 namespace SmartTeach.Persistence.Migrations
 {
     [DbContext(typeof(SmartTeachDbcontext))]
-    partial class SmartTeachDbcontextModelSnapshot : ModelSnapshot
+    [Migration("20251011205927_fix_attendacesRepetations_students_to")]
+    partial class fix_attendacesRepetations_students_to
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

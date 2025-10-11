@@ -10,6 +10,7 @@ namespace SmartTeach.Domain.Interfaces
 {
     public interface ISessionReposatory:IGenericReposatory<Session>
     {
+        public Task<IEnumerable<Attendance>> SessionAttendace(int sessionId);
 
     }
 }

@@ -1,12 +1,12 @@
 ﻿using SmartTeach.App.Dto;
 using SmartTeach.App.Dto.StudentDto;
-using SmartTeach.App.Dto.StudentGroupDto;
 using SmartTeach.App.Interfaces;
 using SmartTeach.Domain.Models;
 
 
 using SmartTeach.App.Mapping;
 using System.Threading.Tasks;
+using SmartTeach.App.Dto.StudentGroup;
 namespace SmartTeach.App.Services
 {
     public class GroupMangmentService : IGruopMangmentService
@@ -17,9 +17,9 @@ namespace SmartTeach.App.Services
             _unitOfWork=unitOfWork;
         }
 
-        public async Task<AddGroupDto> AddGroup(AddGroupDto group)
+        public async Task<AddGroupDto> AddGroup(AddGroupDto group, string TeacherId)
         {
-            var Domain= GroupMapping.MapToGroup(group); 
+            var Domain= GroupMapping.MapToGroup(group,TeacherId); 
 
 
             await _unitOfWork.Groups.AddAsync(Domain);
@@ -28,15 +28,18 @@ namespace SmartTeach.App.Services
                 return group;
            
         }
+       
 
-        public async Task<StudentGroupDto> AddStudentToGroup(AddStudenetDto studentDto, int groupId)
+        public async Task<  StudentGroupDto> AddStudentToGroup(AddStudenetDto studentDto, int groupId)
         {
             var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
             if (group == null)
                 throw new ArgumentException($"Group with ID {groupId} does not exist.");
-
+            
             var student = studentDto.MapToStudent();
+
             await _unitOfWork.Students.AddAsync(student);
+            
             if (await _unitOfWork.CompleteAsync() <= 0)
                 throw new InvalidOperationException("Could not create the student.");
 
@@ -57,6 +60,23 @@ namespace SmartTeach.App.Services
             };
         }
 
+        public async Task AssignStudentToGroup(int studentId, int groupId)
+        {
+            var group = await _unitOfWork.Groups.GetByIdAsync(groupId);
+            if (group == null)
+                throw new ArgumentException($"Group with ID {groupId} does not exist.");
+            var student = await _unitOfWork.Students.GetByIdAsync(studentId);
+            if (student == null)
+                throw new ArgumentException($"Student with ID {studentId} does not exist.");
+            var studentGroup = new StudentGroup
+            {
+                StudentId = studentId,
+                GroupId = groupId
+            };
+            await _unitOfWork.StudentsGroups.AddAsync(studentGroup);
+            if (await _unitOfWork.CompleteAsync() <= 0)
+                throw new InvalidOperationException("Could not link the student to the group.");
+        }
 
 
         public void DeleteGroup(int id)
@@ -71,9 +91,9 @@ namespace SmartTeach.App.Services
             _unitOfWork.CompleteAsync();
         }
 
-        public async Task<IEnumerable<GroupDto>> GetAllGroups()
+        public async Task<IEnumerable<GroupDto>> GetAllGroups(string TeacherId)
         {
-            var groups=await _unitOfWork.Groups.GetAllAsync();
+            var groups=await _unitOfWork.Groups.GetAllAsync(filter:a=>a.ApplicationUserId==TeacherId);
 
             var mapgroup = groups.MapToGroupDtos();
             if (mapgroup!=null) return mapgroup;
@@ -105,12 +125,14 @@ namespace SmartTeach.App.Services
 
             return groupDto;
         }
-        public async Task<IEnumerable<StudentGroupDto>> GetStudentGroupById(int id)
+
+        public async Task<IEnumerable<GetStudentDto>> GetStudentGroupById(int id)
         {
             var studentGroup = await _unitOfWork.StudentsGroups.GetAllAsync(filter: a => a.GroupId==id, includes: a => a.Student);
             if (studentGroup == null)
                 throw new ArgumentException($"StudentGroup with ID {id} does not exist.");
-            return studentGroup.MapToDtoList();
+            var students = studentGroup.Select(s => s.Student).ToList();
+            return students.MapToGetStudentDtos();
         }
         public UpdateGroupDto UpdateGroup(UpdateGroupDto group)
         {

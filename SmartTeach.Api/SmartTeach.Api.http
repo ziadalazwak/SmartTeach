@@ -4,3 +4,10 @@ GET {{SmartTeach.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Get session attendance display for a specific session
+# This will show all students in the group with their attendance status (present/absent)
+GET {{SmartTeach.Api_HostAddress}}/api/SessionMangment/GetSessionAttendanceDisplay/1
+Accept: application/json
+
+###

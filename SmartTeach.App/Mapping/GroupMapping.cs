@@ -10,12 +10,12 @@ namespace SmartTeach.App.Mapping
 {
     public static class GroupMapping
     {
-        public static Group MapToGroup(AddGroupDto group)
+        public static Group MapToGroup(AddGroupDto group, string TeacherId)
         {
             if (group == null) return null;
             return new Group
             {
-              
+              ApplicationUserId=TeacherId,
                 Name = group.Name,
                  Subject=group.Subject,
                  centerd=group.centerd,
@@ -44,8 +44,8 @@ namespace SmartTeach.App.Mapping
                 Name = group.Name,
                 Subject = group.Subject,
                 centerd = group.centerd,
-                Sessions = group.Sessions,
-                GroupStudents=group.GroupStudents?.MapToDtoList()
+                Sessions = group.Sessions.MapToDtos(),
+                
             };
             
         }

@@ -1,4 +1,4 @@
-﻿using SmartTeach.App.Dto.StudentGroupDto;
+﻿using SmartTeach.App.Dto.StudentGroup;
 using SmartTeach.Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -32,6 +32,7 @@ namespace SmartTeach.App.Mapping
                 Group = studentGroup.Group.MapToGroupDto()
             };
         }
+
         public static IEnumerable<StudentGroupDto> MapToDtoList(this IEnumerable<StudentGroup> studentGroups)
         {
             return studentGroups.Select(a=>a.MapToDto()).ToList();
