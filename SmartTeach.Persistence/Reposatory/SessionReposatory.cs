@@ -27,5 +27,6 @@ namespace SmartTeach.Persistence.Reposatory
                 .ToListAsync();
             return attendances;
         }   
+      
     }
 }

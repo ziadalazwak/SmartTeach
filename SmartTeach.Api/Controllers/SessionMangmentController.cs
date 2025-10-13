@@ -31,6 +31,22 @@ namespace SmartTeach.Api.Controllers
             return Ok(session);
         }
         [HttpPost]
+        [Route("AddAttendaceForNewStudent/{sessionId}")]
+        public async Task<IActionResult> AddAttendaceForNewStudent(int sessionId, [FromBody] AddAttendanceDto addAttendanceDto)
+        {
+            if (addAttendanceDto.StudentId < 0)
+                return BadRequest("Attendance data is wrong.");
+            try
+            {
+                var student = await sessionMangmentService.AddAttendaceForNewStudent(addAttendanceDto, sessionId);
+                return Ok(student);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        [HttpPost]
         [Route("AddSession/{groupId}")]
         public async Task<IActionResult> AddSession(int groupId, [FromBody] AddSessionDto addSessionDto)
         {

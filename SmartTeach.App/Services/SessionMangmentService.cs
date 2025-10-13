@@ -5,6 +5,7 @@ using SmartTeach.App.Dto.StudentDto;
 using SmartTeach.App.Interfaces;
 using SmartTeach.App.Mapping;
 using SmartTeach.Domain.Interfaces;
+using SmartTeach.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,36 +23,83 @@ namespace SmartTeach.App.Services
         {
             _unitOfWork = unitOfWork;
             _groupReposatory = groupReposatory;
-            _sessionReposatory = sessionReposatory; 
+            _sessionReposatory = sessionReposatory;
 
         }
         public async Task<GetStudentDto> AddAttendaceForSessionAsync(AddAttendanceDto addAttendanceDto, int sessionid)
         {
-            var student = await _unitOfWork.Students.GetByIdAsync(addAttendanceDto.StudentId);
-            if(student == null) throw new InvalidOperationException(" Id is invalid ");
+            var student = await _unitOfWork.Students.GetByIdAsync(addAttendanceDto.StudentId, includes: a => a.Attendances.Where(a => a.SessionId==sessionid));
+            if (student == null) throw new InvalidOperationException(" Id is invalid ");
+            if (student.Attendances != null && student.Attendances.Any(a => a.SessionId == sessionid))
+            {
+                if (student.Attendances.FirstOrDefault().IsPresent==true)
+                    throw new InvalidOperationException("Attendance for this student in this session already exists.");
+                else
+                {
+                    student.Attendances.FirstOrDefault().IsPresent = true;
+                    _unitOfWork.Students.Update(student);
+                    var commit1 = await _unitOfWork.CompleteAsync();
+                    if (commit1 <= 0)
+                        throw new InvalidOperationException("Could not add attendance for the session.");
+                    return student.MapToGetStudentDto();
+                }
+            }
 
-            var attendanceExists = await _unitOfWork.Attendances.GetAllAsync(filter: a => a.SessionId == sessionid && a.StudentId == addAttendanceDto.StudentId);
-            if (attendanceExists != null && attendanceExists.Any())
-                throw new InvalidOperationException("Attendance for this student in this session already exists.");
 
-            var attendances = addAttendanceDto.MapToDomain(sessionid);
-            await _unitOfWork.Attendances.AddAsync(attendances);
-            var commit = await _unitOfWork.CompleteAsync();
-            if (commit <= 0)
-                throw new InvalidOperationException("Could not add attendance for the session.");
+
+
 
             return student.MapToGetStudentDto();
 
         }
 
-        public async Task<AddSessionDto> AddSession(int groupId, AddSessionDto addSessionDto)
+        public async Task<GetStudentDto> AddAttendaceForNewStudent(AddAttendanceDto addAttendanceDto, int sessionid)
         {
+            var student = await _unitOfWork.Students.GetByIdAsync(addAttendanceDto.StudentId, includes: a => a.Attendances.Where(a => a.SessionId==sessionid));
+           
+            if (student == null) throw new InvalidOperationException(" Id is invalid ");
+            if (student.Attendances != null && student.Attendances.Any(a => a.SessionId == sessionid))
+            {
+                throw new InvalidOperationException("Attendance for this student in this session already exists.");
+            }
+         var newAttendace= new Attendance
+            {
+                StudentId = addAttendanceDto.StudentId,
+                IsPresent = true,
+                SessionId = sessionid
+          };
+
+            await _unitOfWork.Attendances.AddAsync(newAttendace);
+            var Complete=await _unitOfWork.CompleteAsync();
+            if (Complete <= 0)
+                throw new InvalidOperationException("Could not add attendance for the session.");
+
+
+
+
+
+            return student.MapToGetStudentDto();
+
+        }
+
+        public async Task<AddSessionDto > AddSession(int groupId, AddSessionDto addSessionDto)
+        {
+         
             var session = addSessionDto.MapToDomain(groupId);
             await _unitOfWork.Sessions.AddAsync(session);
             var commit = await _unitOfWork.CompleteAsync();
             if (commit <= 0)
                 throw new InvalidOperationException("Could not create the session.");
-
+            var students = await _unitOfWork.StudentsGroups.GetAllAsync(s => s.GroupId==groupId);
+            await _unitOfWork.Attendances.AddRangeAsync(students.Select(s => new Attendance
+            {
+                StudentId = s.StudentId,
+                IsPresent = false,
+                SessionId =session.Id
+            }));
+            commit = await _unitOfWork.CompleteAsync();
+            if (commit <= 0)
+                throw new InvalidOperationException("Could not create the attendance for the session.");
 
             return addSessionDto;
         }
